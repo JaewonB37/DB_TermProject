@@ -1,5 +1,6 @@
 import pymysql
 from sshtunnel import SSHTunnelForwarder
+from prettytable import PrettyTable
 
 # # SSH 및 데이터베이스 설정
 # SSH_HOST = ''
@@ -11,6 +12,7 @@ from sshtunnel import SSHTunnelForwarder
 # DB_PASSWORD = ''
 # DB_NAME = 'estate'
 # DB_PORT = 
+
 
 def main_menu():
     with SSHTunnelForwarder(
@@ -101,37 +103,56 @@ def display_menu():
 def display_properties(conn):
     with conn.cursor() as cursor:
         cursor.execute("SELECT * FROM Properties")
-        print("\n부동산 목록:")
-        for row in cursor.fetchall():
-            print(row)
+        rows = cursor.fetchall()
+        table = PrettyTable()
+        table.field_names = [desc[0] for desc in cursor.description]  # 컬럼명 설정
+        for row in rows:
+            table.add_row(row)
+        print(table)
 
 def display_agents(conn):
     with conn.cursor() as cursor:
         cursor.execute("SELECT * FROM Agents")
+        rows = cursor.fetchall()
+        table = PrettyTable()
+        table.field_names = [desc[0] for desc in cursor.description]
+        for row in rows:
+            table.add_row(row)
         print("\n에이전트 목록:")
-        for row in cursor.fetchall():
-            print(row)
+        print(table)
 
 def display_clients(conn):
     with conn.cursor() as cursor:
         cursor.execute("SELECT * FROM Clients")
+        rows = cursor.fetchall()
+        table = PrettyTable()
+        table.field_names = [desc[0] for desc in cursor.description]
+        for row in rows:
+            table.add_row(row)
         print("\n고객 목록:")
-        for row in cursor.fetchall():
-            print(row)
+        print(table)
 
 def display_transactions(conn):
     with conn.cursor() as cursor:
         cursor.execute("SELECT * FROM Transactions")
+        rows = cursor.fetchall()
+        table = PrettyTable()
+        table.field_names = [desc[0] for desc in cursor.description]
+        for row in rows:
+            table.add_row(row)
         print("\n거래 내역:")
-        for row in cursor.fetchall():
-            print(row)
+        print(table)
 
 def display_appointments(conn):
     with conn.cursor() as cursor:
         cursor.execute("SELECT * FROM Appointments")
+        rows = cursor.fetchall()
+        table = PrettyTable()
+        table.field_names = [desc[0] for desc in cursor.description]
+        for row in rows:
+            table.add_row(row)
         print("\n예약 목록:")
-        for row in cursor.fetchall():
-            print(row)
+        print(table)
 
 def add_property(conn):
     print("\n부동산 정보 추가:")
