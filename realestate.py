@@ -1,40 +1,80 @@
-import paramiko
-import mysql.connector
+import pymysql
+from sshtunnel import SSHTunnelForwarder
 
-# SSH 서버 정보
-ssh_host = "192.168.0.10"  # SSH 서버 주소
-ssh_port = 22  # SSH 포트
-ssh_username = "jaewon"  # SSH 사용자 이름
-ssh_password = ""  # SSH 비밀번호
+# SSH 및 데이터베이스 설정
+SSH_HOST = '192.168.0.10'
+SSH_PORT = 22
+SSH_USERNAME = 'jaewon'
+SSH_PASSWORD = 'mina0622'
+DB_HOST = '127.0.0.1'
+DB_USER = 'root'
+DB_PASSWORD = '1234'
+DB_NAME = 'estate'
+DB_PORT = 4567
 
-# SSH 터널 설정
-def setup_ssh_tunnel():
-    ssh_client = paramiko.SSHClient()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh_client.connect(ssh_host, port=ssh_port, username=ssh_username, password=ssh_password)
-    ssh_transport = ssh_client.get_transport()
-    local_port = 3306  # 로컬 포트 (MySQL과 동일한 포트)
-    remote_host = "192.168.0.10"  # 원격 MySQL 호스트 (SSH 터널을 통해 접근)
-    remote_port = 3306  # 원격 MySQL 포트
+def main_menu():
+    with SSHTunnelForwarder(
+            (SSH_HOST, SSH_PORT),
+            ssh_username=SSH_USERNAME,
+            ssh_password=SSH_PASSWORD,
+            remote_bind_address=(DB_HOST, DB_PORT)) as tunnel:
 
-    # SSH 터널 열기
-    ssh_channel = ssh_transport.open_channel("direct-tcpip", (remote_host, remote_port), ("localhost", local_port))
-    return ssh_channel
+        conn = pymysql.connect(host='127.0.0.1', user=DB_USER, passwd=DB_PASSWORD, db=DB_NAME, port=tunnel.local_bind_port)
+        
+        while True:
+            display_menu()
+            choice = input("메뉴 번호를 입력하세요: ")
 
-# MySQL 연결 설정
-def setup_mysql_connection(ssh_channel):
-    db_connection = mysql.connector.connect(
-        host="192.168.0.10",
-        user="root",
-        password="1234",
-        database="estate",
-        port=ssh_channel.getpeername()[1]  # SSH 터널로부터 포트 얻기
-    )
-    return db_connection
+            if choice == "0":
+                break
+            elif choice == "1":
+                display_properties(conn)
+            elif choice == "2":
+                display_agents(conn)
+            elif choice == "3":
+                display_clients(conn)
+            elif choice == "4":
+                display_transactions(conn)
+            elif choice == "5":
+                display_appointments(conn)
+            elif choice == "6":
+                add_property(conn)
+            elif choice == "7":
+                add_agent(conn)
+            elif choice == "8":
+                add_client(conn)
+            elif choice == "9":
+                add_transaction(conn)
+            elif choice == "10":
+                add_appointment(conn)
+            elif choice == "11":
+                update_property(conn)
+            elif choice == "12":
+                update_agent(conn)
+            elif choice == "13":
+                update_client(conn)
+            elif choice == "14":
+                update_transaction(conn)
+            elif choice == "15":
+                update_appointment(conn)
+            elif choice == "16":
+                delete_property(conn)
+            elif choice == "17":
+                delete_agent(conn)
+            elif choice == "18":
+                delete_client(conn)
+            elif choice == "19":
+                delete_transaction(conn)
+            elif choice == "20":
+                delete_appointment(conn)
+            else:
+                print("잘못된 입력입니다. 다시 시도해주세요.")
+        
+        conn.close()
 
-# 메뉴 표시 함수
+
 def display_menu():
-    print("부동산 관리 시스템 메뉴:")
+    print("\n부동산 관리 시스템 메뉴:")
     print("1. 부동산 목록 조회")
     print("2. 에이전트 목록 조회")
     print("3. 고객 목록 조회")
@@ -45,140 +85,208 @@ def display_menu():
     print("8. 고객 추가")
     print("9. 거래 추가")
     print("10. 예약 추가")
+    print("11. 부동산 정보 업데이트")
+    print("12. 에이전트 정보 업데이트")
+    print("13. 고객 정보 업데이트")
+    print("14. 거래 정보 업데이트")
+    print("15. 예약 정보 업데이트")
+    print("16. 부동산 정보 삭제")
+    print("17. 에이전트 정보 삭제")
+    print("18. 고객 정보 삭제")
+    print("19. 거래 정보 삭제")
+    print("20. 예약 정보 삭제")
     print("0. 종료")
 
-# 메인 메뉴 함수
-def main_menu():
-    ssh_channel = setup_ssh_tunnel()
-    db_connection = setup_mysql_connection(ssh_channel)
-    cursor = db_connection.cursor()
 
-    while True:
-        display_menu()
-        choice = input("메뉴 번호를 입력하세요: ")
+def display_properties(conn):
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM Properties")
+        print("\n부동산 목록:")
+        for row in cursor.fetchall():
+            print(row)
 
-        if choice == "0":
-            break
-        elif choice == "1":
-            display_properties(cursor)
-        elif choice == "2":
-            display_agents(cursor)
-        elif choice == "3":
-            display_clients(cursor)
-        elif choice == "4":
-            display_transactions(cursor)
-        elif choice == "5":
-            display_appointments(cursor)
-        elif choice == "6":
-            add_property(cursor, db_connection)
-        elif choice == "7":
-            add_agent(cursor, db_connection)
-        elif choice == "8":
-            add_client(cursor, db_connection)
-        elif choice == "9":
-            add_transaction(cursor, db_connection)
-        elif choice == "10":
-            add_appointment(cursor, db_connection)
-        else:
-            print("올바른 메뉴 번호를 입력하세요.")
+def display_agents(conn):
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM Agents")
+        print("\n에이전트 목록:")
+        for row in cursor.fetchall():
+            print(row)
 
-    # MySQL 연결 종료
-    cursor.close()
-    db_connection.close()
-    ssh_channel.close()
+def display_clients(conn):
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM Clients")
+        print("\n고객 목록:")
+        for row in cursor.fetchall():
+            print(row)
 
-# 각각의 메뉴 함수 (추가 기능)
-def display_properties(cursor):
-    cursor.execute("SELECT * FROM properties")
-    properties = cursor.fetchall()
-    print("부동산 목록:")
-    for property in properties:
-        print(f"Property ID: {property[0]}, Type: {property[1]}, Location: {property[2]}, Size: {property[3]}, Price: {property[4]}")
+def display_transactions(conn):
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM Transactions")
+        print("\n거래 내역:")
+        for row in cursor.fetchall():
+            print(row)
 
-def display_agents(cursor):
-    cursor.execute("SELECT * FROM agents")
-    agents = cursor.fetchall()
-    print("에이전트 목록:")
-    for agent in agents:
-        print(f"Agent ID: {agent[0]}, Name: {agent[1]}, Contact Number: {agent[2]}, Email: {agent[3]}")
+def display_appointments(conn):
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM Appointments")
+        print("\n예약 목록:")
+        for row in cursor.fetchall():
+            print(row)
 
-def display_clients(cursor):
-    cursor.execute("SELECT * FROM clients")
-    clients = cursor.fetchall()
-    print("고객 목록:")
-    for client in clients:
-        print(f"Client ID: {client[0]}, Name: {client[1]}, Contact Number: {client[2]}, Email: {client[3]}, Address: {client[4]}")
+def add_property(conn):
+    print("\n부동산 정보 추가:")
+    type = input("유형: ")
+    location = input("위치: ")
+    size = input("크기: ")
+    price = input("가격: ")
+    with conn.cursor() as cursor:
+        cursor.execute("INSERT INTO Properties (Type, Location, Size, Price) VALUES (%s, %s, %s, %s)", (type, location, size, price))
+        conn.commit()
+    print("부동산 정보가 추가되었습니다.")
 
-def display_transactions(cursor):
-    cursor.execute("SELECT * FROM transactions")
-    transactions = cursor.fetchall()
-    print("거래 내역:")
-    for transaction in transactions:
-        print(f"Transaction ID: {transaction[0]}, Property ID: {transaction[1]}, Client ID: {transaction[2]}, Agent ID: {transaction[3]}, Date: {transaction[4]}, Type: {transaction[5]}, Amount: {transaction[6]}")
+def add_agent(conn):
+    print("\n에이전트 정보 추가:")
+    name = input("이름: ")
+    contact_number = input("연락처: ")
+    email = input("이메일: ")
+    with conn.cursor() as cursor:
+        cursor.execute("INSERT INTO Agents (Name, ContactNumber, Email) VALUES (%s, %s, %s)", (name, contact_number, email))
+        conn.commit()
+    print("에이전트 정보가 추가되었습니다.")
 
-def display_appointments(cursor):
-    cursor.execute("SELECT * FROM appointments")
-    appointments = cursor.fetchall()
-    print("예약 목록:")
-    for appointment in appointments:
-        print(f"Appointment ID: {appointment[0]}, Client ID: {appointment[1]}, Agent ID: {appointment[2]}, Property ID: {appointment[3]}, Date: {appointment[4]}, Time: {appointment[5]}")
+def add_client(conn):
+    print("\n고객 정보 추가:")
+    name = input("이름: ")
+    contact_number = input("연락처: ")
+    email = input("이메일: ")
+    address = input("주소: ")
+    with conn.cursor() as cursor:
+        cursor.execute("INSERT INTO Clients (Name, ContactNumber, Email, Address) VALUES (%s, %s, %s, %s)", (name, contact_number, email, address))
+        conn.commit()
+    print("고객 정보가 추가되었습니다.")
 
-def add_property(cursor, db_connection):
-    prop_type = input("부동산 유형 입력: ")
-    location = input("위치 입력: ")
-    size = float(input("크기 입력: "))
-    price = float(input("가격 입력: "))
+def add_transaction(conn):
+    print("\n거래 정보 추가:")
+    property_id = input("부동산 ID: ")
+    client_id = input("고객 ID: ")
+    agent_id = input("에이전트 ID: ")
+    date = input("거래 날짜(YYYY-MM-DD): ")
+    type = input("거래 유형: ")
+    amount = input("금액: ")
+    with conn.cursor() as cursor:
+        cursor.execute("INSERT INTO Transactions (PropertyID, ClientID, AgentID, Date, Type, Amount) VALUES (%s, %s, %s, %s, %s, %s)", (property_id, client_id, agent_id, date, type, amount))
+        conn.commit()
+    print("거래 정보가 추가되었습니다.")
 
-    cursor.execute("INSERT INTO properties (Type, Location, Size, Price) VALUES (%s, %s, %s, %s)",
-                   (prop_type, location, size, price))
-    db_connection.commit()
-    print("부동산이 추가되었습니다.")
+def add_appointment(conn):
+    print("\n예약 정보 추가:")
+    client_id = input("고객 ID: ")
+    agent_id = input("에이전트 ID: ")
+    property_id = input("부동산 ID: ")
+    date = input("예약 날짜(YYYY-MM-DD): ")
+    time = input("예약 시간(HH:MM): ")
+    with conn.cursor() as cursor:
+        cursor.execute("INSERT INTO Appointments (ClientID, AgentID, PropertyID, Date, Time) VALUES (%s, %s, %s, %s, %s)", (client_id, agent_id, property_id, date, time))
+        conn.commit()
+    print("예약 정보가 추가되었습니다.")
+    
+def update_property(conn):
+    property_id = input("수정할 부동산 ID: ")
+    new_type = input("새 유형: ")
+    new_location = input("새 위치: ")
+    new_size = input("새 크기: ")
+    new_price = input("새 가격: ")
+    with conn.cursor() as cursor:
+        cursor.execute("UPDATE Properties SET Type=%s, Location=%s, Size=%s, Price=%s WHERE PropertyID=%s",
+                       (new_type, new_location, new_size, new_price, property_id))
+        conn.commit()
+        print("부동산 정보가 업데이트되었습니다.")
 
-def add_agent(cursor, db_connection):
-    name = input("에이전트 이름 입력: ")
-    contact_number = input("에이전트 연락처 입력: ")
-    email = input("에이전트 이메일 입력: ")
 
-    cursor.execute("INSERT INTO agents (Name, ContactNumber, Email) VALUES (%s, %s, %s)",
-                   (name, contact_number, email))
-    db_connection.commit()
-    print("에이전트가 추가되었습니다.")
+def update_agent(conn):
+    agent_id = input("수정할 에이전트 ID: ")
+    new_name = input("새 이름: ")
+    new_contact_number = input("새 연락처: ")
+    new_email = input("새 이메일: ")
+    with conn.cursor() as cursor:
+        cursor.execute("UPDATE Agents SET Name=%s, ContactNumber=%s, Email=%s WHERE AgentID=%s",
+                       (new_name, new_contact_number, new_email, agent_id))
+        conn.commit()
+        print("에이전트 정보가 업데이트되었습니다.")
 
-def add_client(cursor, db_connection):
-    name = input("고객 이름 입력: ")
-    contact_number = input("고객 연락처 입력: ")
-    email = input("고객 이메일 입력: ")
-    address = input("고객 주소 입력: ")
+def update_client(conn):
+    client_id = input("수정할 고객 ID: ")
+    new_name = input("새 이름: ")
+    new_contact_number = input("새 연락처: ")
+    new_email = input("새 이메일: ")
+    new_address = input("새 주소: ")
+    with conn.cursor() as cursor:
+        cursor.execute("UPDATE Clients SET Name=%s, ContactNumber=%s, Email=%s, Address=%s WHERE ClientID=%s",
+                       (new_name, new_contact_number, new_email, new_address, client_id))
+        conn.commit()
+        print("고객 정보가 업데이트되었습니다.")
 
-    cursor.execute("INSERT INTO clients (Name, ContactNumber, Email, Address) VALUES (%s, %s, %s, %s)",
-                   (name, contact_number, email, address))
-    db_connection.commit()
-    print("고객이 추가되었습니다.")
+def update_transaction(conn):
+    transaction_id = input("수정할 거래 ID: ")
+    new_property_id = input("새 부동산 ID: ")
+    new_client_id = input("새 고객 ID: ")
+    new_agent_id = input("새 에이전트 ID: ")
+    new_date = input("새 거래 날짜(YYYY-MM-DD): ")
+    new_type = input("새 거래 유형: ")
+    new_amount = input("새 금액: ")
+    with conn.cursor() as cursor:
+        cursor.execute("UPDATE Transactions SET PropertyID=%s, ClientID=%s, AgentID=%s, Date=%s, Type=%s, Amount=%s WHERE TransactionID=%s",
+                       (new_property_id, new_client_id, new_agent_id, new_date, new_type, new_amount, transaction_id))
+        conn.commit()
+        print("거래 정보가 업데이트되었습니다.")
 
-def add_transaction(cursor, db_connection):
-    property_id = int(input("부동산 ID 입력: "))
-    client_id = int(input("고객 ID 입력: "))
-    agent_id = int(input("에이전트 ID 입력: "))
-    date = input("거래 날짜 입력 (YYYY-MM-DD): ")
-    trans_type = input("거래 유형 입력: ")
-    amount = float(input("거래 금액 입력: "))
+def update_appointment(conn):
+    appointment_id = input("수정할 예약 ID: ")
+    new_client_id = input("새 고객 ID: ")
+    new_agent_id = input("새 에이전트 ID: ")
+    new_property_id = input("새 부동산 ID: ")
+    new_date = input("새 예약 날짜(YYYY-MM-DD): ")
+    new_time = input("새 예약 시간(HH:MM): ")
+    with conn.cursor() as cursor:
+        cursor.execute("UPDATE Appointments SET ClientID=%s, AgentID=%s, PropertyID=%s, Date=%s, Time=%s WHERE AppointmentID=%s",
+                       (new_client_id, new_agent_id, new_property_id, new_date, new_time, appointment_id))
+        conn.commit()
+        print("예약 정보가 업데이트되었습니다.")
 
-    cursor.execute("INSERT INTO transactions (PropertyID, ClientID, AgentID, Date, Type, Amount) VALUES (%s, %s, %s, %s, %s, %s)",
-                   (property_id, client_id, agent_id, date, trans_type, amount))
-    db_connection.commit()
-    print("거래가 추가되었습니다.")
+def delete_property(conn):
+    property_id = input("삭제할 부동산 ID: ")
+    with conn.cursor() as cursor:
+        cursor.execute("DELETE FROM Properties WHERE PropertyID=%s", (property_id,))
+        conn.commit()
+        print("부동산 정보가 삭제되었습니다.")
 
-def add_appointment(cursor, db_connection):
-    client_id = int(input("고객 ID 입력: "))
-    agent_id = int(input("에이전트 ID 입력: "))
-    property_id = int(input("부동산 ID 입력: "))
-    date = input("예약 날짜 입력 (YYYY-MM-DD): ")
-    time = input("예약 시간 입력: ")
+def delete_agent(conn):
+    agent_id = input("삭제할 에이전트 ID: ")
+    with conn.cursor() as cursor:
+        cursor.execute("DELETE FROM Agents WHERE AgentID=%s", (agent_id,))
+        conn.commit()
+        print("에이전트 정보가 삭제되었습니다.")
 
-    cursor.execute("INSERT INTO appointments (ClientID, AgentID, PropertyID, Date, Time) VALUES (%s, %s, %s, %s, %s)",
-                   (client_id, agent_id, property_id, date, time))
-    db_connection.commit()
-    print("예약이 추가되었습니다.")
+def delete_client(conn):
+    client_id = input("삭제할 고객 ID: ")
+    with conn.cursor() as cursor:
+        cursor.execute("DELETE FROM Clients WHERE ClientID=%s", (client_id,))
+        conn.commit()
+        print("고객 정보가 삭제되었습니다.")
+
+def delete_transaction(conn):
+    transaction_id = input("삭제할 거래 ID: ")
+    with conn.cursor() as cursor:
+        cursor.execute("DELETE FROM Transactions WHERE TransactionID=%s", (transaction_id,))
+        conn.commit()
+        print("거래 정보가 삭제되었습니다.")
+
+def delete_appointment(conn):
+    appointment_id = input("삭제할 예약 ID: ")
+    with conn.cursor() as cursor:
+        cursor.execute("DELETE FROM Appointments WHERE AppointmentID=%s", (appointment_id,))
+        conn.commit()
+        print("예약 정보가 삭제되었습니다.")
 
 if __name__ == "__main__":
     main_menu()
