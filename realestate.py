@@ -1,16 +1,16 @@
 import pymysql
 from sshtunnel import SSHTunnelForwarder
 
-# SSH 및 데이터베이스 설정
-SSH_HOST = '192.168.0.10'
-SSH_PORT = 22
-SSH_USERNAME = 'jaewon'
-SSH_PASSWORD = 'mina0622'
-DB_HOST = '127.0.0.1'
-DB_USER = 'root'
-DB_PASSWORD = '1234'
-DB_NAME = 'estate'
-DB_PORT = 4567
+# # SSH 및 데이터베이스 설정
+# SSH_HOST = ''
+# SSH_PORT = 
+# SSH_USERNAME = ''
+# SSH_PASSWORD = ''
+# DB_HOST = ''
+# DB_USER = 'root'
+# DB_PASSWORD = ''
+# DB_NAME = 'estate'
+# DB_PORT = 
 
 def main_menu():
     with SSHTunnelForwarder(
