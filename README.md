@@ -29,7 +29,7 @@ The Real Estate Management System is a comprehensive Python-based application de
    
 4. **Run the Program:**
    ```bash
-   python [script_name].py
+   python realestate.py
 
 Features
 Data Management: View, add, update, and delete details of properties, agents, clients, transactions, and appointments.
