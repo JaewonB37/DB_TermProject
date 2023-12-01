@@ -15,24 +15,22 @@ The Real Estate Management System is a comprehensive Python-based application de
 
 1. **Clone the Project from GitHub:**
    ```bash
-   git clone [repository URL]
-Install and Configure MySQL:
+   git clone https://github.com/JaewonB37/DB_TermProject.git
 
-bash
-Copy code
-sudo yum install mysql-server
-sudo systemctl start mysqld
-sudo mysql_secure_installation
-Set Up Python Environment:
+2. **Install and Configure MySQL:**
+   ```bash
+   sudo yum install mysql-server
+   sudo systemctl start mysqld
+   sudo mysql_secure_installation
 
-bash
-Copy code
-pip install pymysql sshtunnel
-Run the Program:
+3. **Set Up Python Environment:**
+   ```bash
+   pip install pymysql sshtunnel
+   
+4. **Run the Program:**
+   ```bash
+   python [script_name].py
 
-bash
-Copy code
-python [script_name].py
 Features
 Data Management: View, add, update, and delete details of properties, agents, clients, transactions, and appointments.
 Secure Access: Uses SSH tunneling for secure database access.
